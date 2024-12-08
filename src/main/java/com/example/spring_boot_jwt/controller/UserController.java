@@ -6,6 +6,7 @@ import com.example.spring_boot_jwt.model.User;
 import com.example.spring_boot_jwt.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -23,6 +24,8 @@ public class UserController {
 
     @Autowired // do dependency injection
     private UserRepository userRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     @GetMapping
     //this is a composed annotation that acts as a GET method
     public List<User> getAllUsers(){
@@ -40,8 +43,9 @@ public class UserController {
         return userRepository.save(userData);
     }
 
-    @PostMapping
+    @PostMapping("/createUser")
     public User createUser(@RequestBody User user){
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
 

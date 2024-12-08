@@ -1,7 +1,10 @@
 package com.example.spring_boot_jwt.config;
 
+import com.example.spring_boot_jwt.service.CustomerUserDetailsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -20,10 +23,15 @@ import org.springframework.security.web.SecurityFilterChain;
 //Enables Spring security's web security support and provides the Spring MVC integration
 public class SecurityConfig {
 
+    @Autowired
+    private CustomerUserDetailsService  customerUserDetailsService;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .csrf(csrf->csrf.ignoringRequestMatchers("/api/users/createUser"))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/users/createUser").permitAll()
                         .requestMatchers("/api/users/**").authenticated()
                         .anyRequest().permitAll()
                 )
@@ -31,15 +39,23 @@ public class SecurityConfig {
                 .httpBasic(Customizer.withDefaults());
         return http.build();
     }
-    @Bean
-    public UserDetailsService userDetailsService(){
-        var user = User.builder()
-                .username("user")
-                .password(passwordEncoder().encode("password"))
-                .roles("USER")
-                .build();
+//    @Bean
+//    public UserDetailsService userDetailsService(){
+//        var user = User.builder()
+//                .username("user")
+//                .password(passwordEncoder().encode("password"))
+//                .roles("USER")
+//                .build();
+//
+//        return new InMemoryUserDetailsManager(user);
+//    }
 
-        return new InMemoryUserDetailsManager(user);
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider(){
+        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
+        daoAuthenticationProvider.setUserDetailsService(customerUserDetailsService);
+        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
+        return daoAuthenticationProvider;
     }
 
     @Bean
