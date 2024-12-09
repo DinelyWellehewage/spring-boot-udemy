@@ -1,6 +1,7 @@
 package com.example.spring_boot_jwt.util;
 
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtBuilder;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -29,5 +30,25 @@ public class JwtUtil {
         byte[] keyBytesPadded = new byte[32];
         System.arraycopy(keyBytes,0,keyBytesPadded,0,Math.min(keyBytes.length,3));
         return Keys.hmacShaKeyFor(keyBytesPadded);
+    }
+
+    public boolean validateToken(String token,String username){
+        return (username.equals(getUsername(token)) && !isTokenExpired(token));
+    }
+
+    private boolean isTokenExpired(String token) {
+        return getClaims(token).getExpiration().before(new Date());
+    }
+
+    private String getUsername(String token){
+        return getClaims(token).getSubject();
+    }
+
+    public String extractUsername(String token){
+        return getClaims(token).getSubject();
+    }
+    public Claims getClaims(String token){
+        return Jwts.parser().verifyWith(generateJwtSecretKey()).build()
+                .parseSignedClaims(token).getPayload();
     }
 }
